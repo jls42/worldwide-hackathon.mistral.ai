@@ -48,7 +48,7 @@ Every line of code was written during the hackathon. All APIs and open-source li
 | 💬 | **AI Chat Tutor** | Contextual chat with your course documents, with tool calling |
 | 🧠 | **Smart Router** | AI analyzes your content and recommends the best generators |
 | 🔒 | **Parental Controls** | Age-based moderation, parental PIN, chat restrictions |
-| 🌍 | **Multilingual** | Full UI in FR/EN, AI prompts ready for 15 languages |
+| 🌍 | **Multilingual** | Full UI and AI content in French and English |
 | 🔊 | **Read Aloud** | Listen to study sheets and flashcards read aloud via ElevenLabs TTS |
 
 ---
@@ -295,7 +295,7 @@ config.ts                 — Runtime config (models, voices, TTS), persisted in
 store.ts                  — ProjectStore: CRUD projects/sources/generations, JSON persistence
 profiles.ts               — ProfileStore: profile management, PIN hashing
 types.ts                  — TypeScript types: Source, Generation (6 types), QuizStats, Profile
-prompts.ts                — All AI prompts centralized (system + user templates, 15 languages)
+prompts.ts                — All AI prompts centralized (system + user templates, FR/EN)
 
 generators/
   ocr.ts                  — Upload + OCR via Mistral (JPG, PNG, PDF)

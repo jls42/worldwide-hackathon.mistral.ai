@@ -48,7 +48,7 @@ Chaque ligne de code a été écrite pendant le hackathon. Toutes les APIs et bi
 | 💬 | **Tuteur IA** | Chat contextuel avec vos documents de cours, avec appel d'outils |
 | 🧠 | **Routeur intelligent** | L'IA analyse votre contenu et recommande les meilleurs générateurs |
 | 🔒 | **Contrôle parental** | Modération par âge, PIN parental, restrictions du chat |
-| 🌍 | **Multilingue** | Interface complète FR/EN, prompts IA prêts pour 15 langues |
+| 🌍 | **Multilingue** | Interface et contenu IA complets en français et anglais |
 | 🔊 | **Lecture à voix haute** | Écoutez les fiches et flashcards lues à voix haute via ElevenLabs TTS |
 
 ---
@@ -295,7 +295,7 @@ config.ts                 — Config runtime (modèles, voix, TTS), persistée d
 store.ts                  — ProjectStore : CRUD projets/sources/générations, persistance JSON
 profiles.ts               — ProfileStore : gestion des profils, hachage PIN
 types.ts                  — Types TypeScript : Source, Generation (6 types), QuizStats, Profile
-prompts.ts                — Tous les prompts IA centralisés (system + user templates, 15 langues)
+prompts.ts                — Tous les prompts IA centralisés (system + user templates, FR/EN)
 
 generators/
   ocr.ts                  — Upload + OCR via Mistral (JPG, PNG, PDF)
