@@ -1,0 +1,26 @@
+import Alpine from 'alpinejs';
+import { createIcons, icons } from 'lucide';
+import './styles/main.css';
+import { registerLocale } from './i18n/index';
+import { fr } from './i18n/fr';
+import { en } from './i18n/en';
+import { app } from './app/index';
+import { quizComponent } from './components/quiz';
+import { quizVocalComponent } from './components/quiz-vocal';
+
+// Register i18n locales before Alpine starts
+registerLocale('fr', fr);
+registerLocale('en', en);
+
+// Register Alpine.js components
+Alpine.data('app', app);
+Alpine.data('quizComponent', quizComponent);
+Alpine.data('quizVocalComponent', quizVocalComponent);
+
+Alpine.start();
+
+// Lucide icons auto-refresh after Alpine init
+document.addEventListener('alpine:initialized', () => createIcons({ icons }));
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => createIcons({ icons }), 100);
+});

@@ -1,0 +1,155 @@
+/* ====== EurekAI Theme Variables ====== */
+
+:root {
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+
+  /* Backgrounds */
+  --color-canvas: #f6f9ff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f8fafc;
+
+  /* Text */
+  --color-text-primary: #3c3c3c;
+  --color-text-secondary: #777777;
+  --color-text-inverted: #ffffff;
+
+  /* Primary */
+  --color-primary-light: #d6f0ff;
+  --color-primary: #1cb0f6;
+  --color-primary-dark: #0a8ad0;
+
+  /* Semantic */
+  --color-success-light: #d7ffb8;
+  --color-success: #58cc02;
+  --color-success-dark: #3ea300;
+  --color-warning-light: #fff4cc;
+  --color-warning: #ffc800;
+  --color-warning-dark: #e5b400;
+  --color-danger-light: #ffd6d6;
+  --color-danger: #ff4b4b;
+  --color-danger-dark: #cc3333;
+  --color-accent-light: #e8d5f5;
+  --color-accent: #8549ba;
+  --color-accent-dark: #6b3a96;
+
+  /* Gen colors */
+  --color-gen-summary: #0077b6;
+  --color-gen-flashcards: #f3722c;
+  --color-gen-quiz: #8549ba;
+  --color-gen-podcast: #2a9d8f;
+  --color-gen-quizvocal: #e76f51;
+  --color-gen-image: #e91e63;
+  --color-gen-summary-rgb: 0, 119, 182;
+  --color-gen-flashcards-rgb: 243, 114, 44;
+  --color-gen-quiz-rgb: 133, 73, 186;
+  --color-gen-podcast-rgb: 42, 157, 143;
+  --color-gen-quizvocal-rgb: 231, 111, 81;
+  --color-gen-image-rgb: 233, 30, 99;
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(229, 231, 235, 0.55);
+  --glass-dark-bg: rgba(10, 138, 208, 0.85);
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(15, 24, 38, 0.06), 0 1px 2px rgba(15, 24, 38, 0.04);
+  --shadow-elevated: 0 10px 30px rgba(15, 24, 38, 0.1), 0 2px 8px rgba(15, 24, 38, 0.06);
+  --shadow-float: 0 20px 48px rgba(15, 24, 38, 0.15), 0 6px 18px rgba(15, 24, 38, 0.1);
+  --shadow-glow: none;
+
+  /* Components */
+  --color-input-bg: rgba(255, 255, 255, 0.85);
+  --color-input-border: rgba(229, 231, 235, 0.9);
+  --color-chip-bg: rgba(255, 255, 255, 0.7);
+  --color-chip-bg-hover: rgba(255, 255, 255, 0.95);
+  --color-chip-bg-active: white;
+  --color-badge-bg: rgba(255, 255, 255, 0.8);
+  --color-badge-border: rgba(229, 231, 235, 0.6);
+  --color-code-bg: rgba(0, 0, 0, 0.06);
+  --color-scrollbar: rgba(180, 180, 180, 0.35);
+  --color-backdrop: rgba(15, 24, 38, 0.45);
+  --color-focus-ring-outer: #fff;
+  --color-sidebar-bg: rgba(255, 255, 255, 0.6);
+  --color-sidebar-border: rgba(229, 231, 235, 0.4);
+  --color-tooltip-bg: #3c3c3c;
+  --color-border-light: rgba(229, 231, 235, 0.5);
+  --color-border-default: rgba(229, 231, 235, 0.6);
+  --color-pulse-bg: #e0e0e0;
+  --color-category-bg: rgba(255, 255, 255, 0.4);
+
+  /* Body gradients */
+  --body-gradient-1: rgba(28, 176, 246, 0.13);
+  --body-gradient-2: rgba(133, 73, 186, 0.09);
+}
+
+[data-theme='dark'] {
+  --color-canvas: #0f1a2e;
+  --color-surface: #182540;
+  --color-surface-hover: #1e2d4d;
+
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8b9ab8;
+  --color-text-inverted: #0f1a2e;
+
+  --color-primary-light: rgba(61, 184, 245, 0.15);
+  --color-primary: #3db8f5;
+  --color-primary-dark: #6ecbf7;
+
+  --color-success-light: rgba(88, 204, 2, 0.15);
+  --color-success: #6ee020;
+  --color-success-dark: #8aee50;
+  --color-warning-light: rgba(255, 200, 0, 0.15);
+  --color-warning: #ffd84d;
+  --color-warning-dark: #ffe580;
+  --color-danger-light: rgba(255, 107, 107, 0.15);
+  --color-danger: #ff6b6b;
+  --color-danger-dark: #ff8e8e;
+  --color-accent-light: rgba(167, 112, 216, 0.15);
+  --color-accent: #a770d8;
+  --color-accent-dark: #c49aed;
+
+  --color-gen-summary: #4fc3f7;
+  --color-gen-flashcards: #ff9a5c;
+  --color-gen-quiz: #b388d9;
+  --color-gen-podcast: #5ec6b8;
+  --color-gen-quizvocal: #ff9580;
+  --color-gen-image: #f48fb1;
+  --color-gen-summary-rgb: 79, 195, 247;
+  --color-gen-flashcards-rgb: 255, 154, 92;
+  --color-gen-quiz-rgb: 179, 136, 217;
+  --color-gen-podcast-rgb: 94, 198, 184;
+  --color-gen-quizvocal-rgb: 255, 149, 128;
+  --color-gen-image-rgb: 244, 143, 177;
+
+  --glass-bg: rgba(15, 26, 46, 0.75);
+  --glass-border: rgba(61, 100, 160, 0.3);
+  --glass-dark-bg: rgba(15, 26, 46, 0.9);
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-elevated: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-float: 0 20px 48px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 20px rgba(61, 184, 245, 0.15);
+
+  --color-input-bg: rgba(24, 37, 64, 0.85);
+  --color-input-border: rgba(61, 100, 160, 0.4);
+  --color-chip-bg: rgba(24, 37, 64, 0.7);
+  --color-chip-bg-hover: rgba(30, 45, 77, 0.95);
+  --color-chip-bg-active: #1e2d4d;
+  --color-badge-bg: rgba(24, 37, 64, 0.8);
+  --color-badge-border: rgba(61, 100, 160, 0.3);
+  --color-code-bg: rgba(255, 255, 255, 0.08);
+  --color-scrollbar: rgba(61, 84, 128, 0.3);
+  --color-backdrop: rgba(0, 0, 0, 0.6);
+  --color-focus-ring-outer: #182540;
+  --color-sidebar-bg: rgba(15, 26, 46, 0.7);
+  --color-sidebar-border: rgba(61, 100, 160, 0.25);
+  --color-tooltip-bg: #2a3f66;
+  --color-border-light: rgba(61, 100, 160, 0.2);
+  --color-border-default: rgba(61, 100, 160, 0.3);
+  --color-pulse-bg: #1e2d4d;
+  --color-category-bg: rgba(24, 37, 64, 0.6);
+
+  --body-gradient-1: rgba(61, 184, 245, 0.08);
+  --body-gradient-2: rgba(167, 112, 216, 0.06);
+}

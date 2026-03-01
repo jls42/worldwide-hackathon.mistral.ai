@@ -1,0 +1,154 @@
+<div x-show="activeView === 'dashboard'">
+  <div class="flex items-center gap-3 mb-1">
+    <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+    <h2 class="font-heading font-bold text-xl title-gradient" x-text="currentProject?.meta?.name">
+      Dashboard
+    </h2>
+  </div>
+  <p class="text-text-secondary text-body-sm mb-5" x-text="t('dashboard.subtitle')"></p>
+
+  <!-- Stats pills -->
+  <div x-show="generations.length > 0" class="flex flex-wrap gap-2 mb-5">
+    <template
+      x-for="cat in categories.filter(c => c.key !== 'dashboard' && c.key !== 'sources')"
+      :key="cat.key"
+    >
+      <button
+        @click="goToView(cat.key)"
+        class="stat-pill hover:shadow-card transition-shadow cursor-pointer"
+      >
+        <i :data-lucide="cat.icon" class="w-3.5 h-3.5" :style="'color:' + cat.color"></i>
+        <span x-text="dashboardStats()[cat.key] || 0"></span>
+        <span class="text-text-secondary" x-text="t(cat.labelKey)"></span>
+      </button>
+    </template>
+    <span class="stat-pill">
+      <i data-lucide="upload-cloud" class="w-3.5 h-3.5 text-accent"></i>
+      <span x-text="sources.length"></span>
+      <span class="text-text-secondary" x-text="t('common.sources')"></span>
+    </span>
+  </div>
+
+  <!-- CTA: No sources -->
+  <div x-show="sources.length === 0" class="text-center py-10">
+    <div
+      class="w-20 h-20 mx-auto mb-4 bg-accent-light rounded-[1.5rem] border border-accent/20 flex items-center justify-center"
+    >
+      <i data-lucide="upload-cloud" class="w-10 h-10 text-accent animate-bounce-icon"></i>
+    </div>
+    <p
+      class="font-heading font-bold text-lg text-text-primary mb-2"
+      x-text="t('dashboard.addFirstSources')"
+    ></p>
+    <p class="text-text-secondary text-body-sm mb-4" x-text="t('dashboard.photoTextVoiceWeb')"></p>
+    <button
+      @click="goToView('sources')"
+      class="bg-accent text-white px-6 min-h-touch rounded-button font-semibold text-body-sm btn-lift focus-ring flex items-center gap-2 mx-auto"
+    >
+      <i data-lucide="plus" class="w-5 h-5"></i>
+      <span x-text="t('common.addSources')"></span>
+    </button>
+  </div>
+
+  <!-- CTA: Has sources, no generations -->
+  <div x-show="sources.length > 0 && generations.length === 0" class="text-center py-8">
+    <div
+      class="w-20 h-20 mx-auto mb-4 bg-primary-light rounded-[1.5rem] border border-primary/20 flex items-center justify-center"
+    >
+      <i data-lucide="sparkles" class="w-10 h-10 text-primary animate-bounce-icon"></i>
+    </div>
+    <p
+      class="font-heading font-bold text-lg text-text-primary mb-2"
+      x-text="t('dashboard.sourcesReady')"
+    ></p>
+    <p class="text-text-secondary text-body-sm mb-5" x-text="t('dashboard.launchMagic')"></p>
+    <div class="flex flex-wrap gap-3 justify-center mb-4">
+      <template
+        x-for="cat in categories.filter(c => !['dashboard','sources','chat'].includes(c.key))"
+        :key="cat.key"
+      >
+        <button
+          @click="generate(cat.key)"
+          :disabled="loading[cat.key] || (['podcast','quiz-vocal'].includes(cat.key) && !apiStatus.elevenlabs)"
+          :title="['podcast','quiz-vocal'].includes(cat.key) && !apiStatus.elevenlabs ? t('gen.needsElevenLabs') : ''"
+          class="px-4 min-h-touch rounded-button font-semibold text-body-sm flex items-center gap-2 btn-lift focus-ring bg-white shadow-card disabled:opacity-50"
+          :style="'color:' + cat.color"
+        >
+          <i :data-lucide="cat.icon" class="w-5 h-5"></i>
+          <span x-text="t(cat.labelKey)"></span>
+        </button>
+      </template>
+    </div>
+    <button
+      @click="generateAuto()"
+      :disabled="isGenerating()"
+      class="w-full max-w-md mx-auto min-h-[56px] bg-gradient-to-r from-primary to-accent text-white rounded-button font-bold text-lg flex items-center justify-center gap-3 shadow-card btn-lift focus-ring disabled:opacity-50"
+    >
+      <i data-lucide="sparkles" class="w-6 h-6"></i>
+      <span x-text="t('dashboard.autoMagic')"></span>
+    </button>
+  </div>
+
+  <!-- Recent generations grid -->
+  <div x-show="generations.length > 0">
+    <div class="flex items-center justify-between mb-3">
+      <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+      <h3
+        class="font-heading font-semibold text-sm text-text-primary"
+        x-text="t('dashboard.recentGenerations')"
+      >
+        Recent
+      </h3>
+      <button
+        @click="generateAuto()"
+        :disabled="isGenerating()"
+        class="px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-button font-semibold text-sm flex items-center gap-2 btn-lift focus-ring disabled:opacity-50"
+      >
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span x-text="t('dashboard.autoMagicShort')"></span>
+      </button>
+    </div>
+    <div class="dashboard-grid">
+      <template x-for="gen in recentGenerations()" :key="gen.id">
+        <button @click="goToView(gen.type)" class="gen-card p-4 text-left focus-ring">
+          <div class="flex items-center gap-2.5 mb-2">
+            <span
+              class="icon-chip shrink-0"
+              :class="{
+                          'icon-chip-summary': gen.type === 'summary',
+                          'icon-chip-flashcards': gen.type === 'flashcards',
+                          'icon-chip-quiz': gen.type === 'quiz',
+                          'icon-chip-podcast': gen.type === 'podcast',
+                          'icon-chip-quizvocal': gen.type === 'quiz-vocal',
+                          'icon-chip-image': gen.type === 'image'
+                        }"
+              ><i
+                :data-lucide="genIcon(gen.type)"
+                class="w-4 h-4"
+                :style="'color:' + genColor(gen.type)"
+              ></i
+            ></span>
+            <span
+              class="text-xs font-semibold uppercase tracking-wider"
+              :style="'color:' + genColor(gen.type)"
+              x-text="t('gen.' + gen.type)"
+            ></span>
+            <!-- Quiz score badge -->
+            <template x-if="gen.type === 'quiz' && gen.stats && gen.stats.attempts.length > 0">
+              <span
+                class="ml-auto text-xs px-2 py-0.5 rounded-badge font-bold"
+                :class="gen.stats.attempts[gen.stats.attempts.length-1].score === gen.stats.attempts[gen.stats.attempts.length-1].total ? 'bg-success-light text-success-dark' : 'bg-warning-light text-warning-dark'"
+                x-text="gen.stats.attempts[gen.stats.attempts.length-1].score + '/' + gen.stats.attempts[gen.stats.attempts.length-1].total"
+              ></span>
+            </template>
+          </div>
+          <p class="font-semibold text-body-sm text-text-primary truncate" x-text="gen.title"></p>
+          <p
+            class="text-sm text-text-secondary mt-0.5"
+            x-text="new Date(gen.createdAt).toLocaleString(dateLocale(), {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})"
+          ></p>
+        </button>
+      </template>
+    </div>
+  </div>
+</div>

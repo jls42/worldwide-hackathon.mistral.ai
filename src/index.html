@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EurekAI</title>
+    <link rel="icon" type="image/webp" href="/logo.webp" />
+    <script>
+      // Anti-flash: apply theme before any rendering
+      (function () {
+        var t = localStorage.getItem('sf-theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.lang = localStorage.getItem('sf-lang') || 'fr';
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-canvas min-h-screen" x-data="app()" x-init="init()" x-cloak>
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-primary-dark focus:text-white focus:px-4 focus:py-2 focus:rounded-button focus-ring"
+    >
+      <span x-text="t('skipLink')"></span>
+    </a>
+
+    {{> profile-picker}} {{> toasts}} {{> header}} {{> sidebar-mobile}}
+
+    <div class="flex gap-0 lg:gap-4 max-w-7xl mx-auto lg:px-4">
+      {{> sidebar-desktop}}
+
+      <main id="main-content" class="flex-1 min-w-0 pb-24 lg:pb-8">
+        {{> tab-courses}}
+
+        <div x-show="mobileTab === 'magic' || !isMobile" class="p-4 lg:p-6 lg:pt-4">
+          <!-- No project selected — show inline course list -->
+          <div x-show="!currentProjectId" class="py-6 max-w-lg mx-auto">
+            <div class="text-center mb-6">
+              <div
+                class="w-16 h-16 mx-auto mb-3 bg-accent-light rounded-[1rem] border border-accent/20 flex items-center justify-center"
+              >
+                <i data-lucide="sparkles" class="w-8 h-8 text-accent"></i>
+              </div>
+              <p
+                class="font-heading font-bold text-xl title-gradient mb-1"
+                x-text="t('noProject.title')"
+              ></p>
+              <p class="text-text-secondary text-body-sm" x-text="t('noProject.subtitle')"></p>
+            </div>
+
+            <!-- New course button -->
+            <button
+              @click="showNewProject = true"
+              class="w-full mb-3 min-h-touch bg-primary text-white rounded-button font-semibold text-body-sm flex items-center justify-center gap-2 btn-lift focus-ring"
+            >
+              <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              <span x-text="t('sidebar.newCourse')"></span>
+            </button>
+            <div x-show="showNewProject" class="mb-4">
+              <div class="flex gap-2">
+                <input
+                  x-model="newProjectName"
+                  x-effect="if (showNewProject) $nextTick(() => $el.focus())"
+                  @keydown.enter="createProject()"
+                  @keydown.escape="showNewProject = false"
+                  class="flex-1 min-w-0 input-modern px-3 py-2 text-body-sm"
+                  :placeholder="t('sidebar.courseNamePlaceholder')"
+                />
+                <button
+                  @click="createProject()"
+                  :disabled="!newProjectName.trim()"
+                  class="shrink-0 bg-primary-dark text-white px-4 rounded-button font-semibold text-body-sm disabled:opacity-50 btn-press focus-ring"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+
+            <!-- Inline course list -->
+            <div x-show="projects.length > 0" class="space-y-2">
+              <template x-for="(p, pi) in sortedProjects()" :key="p.id">
+                <button
+                  class="w-full flex items-center gap-3 p-4 bg-surface rounded-card shadow-card text-left card-lift focus-ring"
+                  :class="currentProjectId === p.id && 'ring-2 ring-primary'"
+                  @click="selectProject(p.id); mobileTab = 'magic'"
+                >
+                  <span
+                    class="project-initial text-lg"
+                    :style="'background:' + projectColor(pi)"
+                    x-text="p.name.charAt(0).toUpperCase()"
+                  ></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-text-primary truncate" x-text="p.name"></p>
+                    <p
+                      class="text-body-sm text-text-secondary"
+                      x-text="new Date(p.updatedAt || p.createdAt).toLocaleDateString(dateLocale())"
+                    ></p>
+                  </div>
+                  <i data-lucide="chevron-right" class="w-5 h-5 text-text-secondary shrink-0"></i>
+                </button>
+              </template>
+            </div>
+
+            <!-- Empty state -->
+            <div x-show="projects.length === 0" class="mt-6 text-center py-8">
+              <div
+                class="w-16 h-16 mx-auto mb-3 bg-primary-light rounded-[1rem] border border-primary/20 flex items-center justify-center"
+              >
+                <i data-lucide="book-open" class="w-8 h-8 text-primary"></i>
+              </div>
+              <p
+                class="font-heading font-bold text-lg text-text-primary mb-1"
+                x-text="t('sidebar.firstCourse')"
+              ></p>
+              <p class="text-text-secondary text-body-sm" x-text="t('tabCourses.addPhotoText')"></p>
+            </div>
+          </div>
+
+          <!-- Project selected -->
+          <template x-if="currentProjectId && currentProject">
+            <div>
+              <!-- Category Navigation Bar -->
+              <div class="category-nav mb-5 bg-white/40 rounded-card p-1 shadow-card">
+                <template x-for="cat in categories" :key="cat.key">
+                  <button
+                    @click="!(cat.key === 'chat' && !currentProfile?.chatEnabled) && goToView(cat.key)"
+                    class="category-chip focus-ring"
+                    :class="[
+                    activeView === cat.key && 'active',
+                    cat.key === 'chat' && !currentProfile?.chatEnabled && 'opacity-40 cursor-not-allowed'
+                  ]"
+                    :disabled="cat.key === 'chat' && !currentProfile?.chatEnabled"
+                    :style="activeView === cat.key ? 'border-color:' + cat.color + '; color:' + cat.color : 'color: #777'"
+                    :title="cat.key === 'chat' && !currentProfile?.chatEnabled ? t('chat.ageRestrictedTooltip') : ''"
+                  >
+                    <i :data-lucide="cat.icon" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline" x-text="t(cat.labelKey)"></span>
+                  </button>
+                </template>
+              </div>
+
+              <!-- Cancel button -->
+              <div x-show="isGenerating()" class="mb-4">
+                <div
+                  class="bg-primary-light border border-primary/30 rounded-card px-4 py-3 flex items-center gap-3"
+                >
+                  <span
+                    class="w-5 h-5 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0"
+                  ></span>
+                  <span
+                    class="flex-1 text-body-sm font-medium text-primary-dark"
+                    x-text="t('common.generatingInProgress')"
+                  ></span>
+                  <button
+                    @click="cancelGeneration()"
+                    class="px-4 py-1.5 bg-white rounded-button text-sm font-semibold text-text-primary shadow-card btn-press focus-ring flex items-center gap-1.5"
+                  >
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    <span x-text="t('common.cancel')"></span>
+                  </button>
+                </div>
+              </div>
+
+              {{> view-dashboard}} {{> view-sources}} {{> view-summary}} {{> view-flashcards}} {{>
+              view-quiz}} {{> view-quiz-vocal}} {{> view-chat}} {{> view-podcast}} {{> view-image}}
+            </div>
+          </template>
+        </div>
+
+        {{> tab-scores}}
+      </main>
+    </div>
+
+    {{> nav-bottom}} {{> dialog-confirm}} {{> dialog-pin}} {{> dialog-source}} {{> dialog-consigne}}
+    {{> dialog-settings}}
+
+    <!-- Image lightbox -->
+    <dialog
+      x-ref="imageLightbox"
+      @click="$refs.imageLightbox?.close()"
+      class="bg-transparent p-0 max-w-[95vw] max-h-[95vh] backdrop:bg-black/70 rounded-card"
+    >
+      <img
+        :src="lightboxUrl"
+        alt=""
+        class="max-w-full max-h-[90vh] object-contain rounded-card cursor-pointer"
+        @click.stop="$refs.imageLightbox?.close()"
+      />
+    </dialog>
+
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

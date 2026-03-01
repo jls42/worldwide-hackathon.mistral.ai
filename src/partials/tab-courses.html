@@ -1,0 +1,67 @@
+<div x-show="mobileTab === 'courses' && isMobile" class="p-4" x-cloak>
+  <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+  <h2 class="font-heading font-bold text-xl title-gradient mb-4" x-text="t('sidebar.myCourses')">
+    My Courses
+  </h2>
+  <button
+    @click="showNewProject = true"
+    class="w-full mb-4 min-h-touch bg-primary text-white rounded-button font-semibold text-body-sm flex items-center justify-center gap-2 btn-lift focus-ring"
+  >
+    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+    <span x-text="t('sidebar.newCourse')"></span>
+  </button>
+  <div x-show="showNewProject" class="mb-4">
+    <div class="flex gap-2">
+      <input
+        x-model="newProjectName"
+        x-effect="if (showNewProject) $nextTick(() => $el.focus())"
+        @keydown.enter="createProject()"
+        @keydown.escape="showNewProject = false"
+        class="flex-1 min-w-0 input-modern px-3 py-2 text-body-sm"
+        :placeholder="t('sidebar.courseNamePlaceholder')"
+      />
+      <button
+        @click="createProject()"
+        :disabled="!newProjectName.trim()"
+        class="shrink-0 bg-primary-dark text-white px-4 rounded-button font-semibold text-body-sm disabled:opacity-50 btn-press focus-ring"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+  <div class="space-y-2">
+    <template x-for="(p, pi) in sortedProjects()" :key="p.id">
+      <button
+        class="w-full flex items-center gap-3 p-4 bg-surface rounded-card shadow-card text-left card-lift focus-ring"
+        :class="currentProjectId === p.id && 'ring-2 ring-primary'"
+        @click="selectProject(p.id); mobileTab = 'magic'"
+      >
+        <span
+          class="project-initial text-lg"
+          :style="'background:' + projectColor(pi)"
+          x-text="p.name.charAt(0).toUpperCase()"
+        ></span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-text-primary truncate" x-text="p.name"></p>
+          <p
+            class="text-body-sm text-text-secondary"
+            x-text="new Date(p.updatedAt || p.createdAt).toLocaleDateString(dateLocale())"
+          ></p>
+        </div>
+        <i data-lucide="chevron-right" class="w-5 h-5 text-text-secondary shrink-0"></i>
+      </button>
+    </template>
+  </div>
+  <div x-show="projects.length === 0" class="mt-8 text-center py-12">
+    <div
+      class="w-20 h-20 mx-auto mb-4 bg-primary-light rounded-[1rem] border border-primary/20 flex items-center justify-center"
+    >
+      <i data-lucide="book-open" class="w-10 h-10 text-primary"></i>
+    </div>
+    <p
+      class="font-heading font-bold text-lg text-text-primary mb-2"
+      x-text="t('sidebar.firstCourse')"
+    ></p>
+    <p class="text-text-secondary text-body-sm mb-4" x-text="t('tabCourses.addPhotoText')"></p>
+  </div>
+</div>

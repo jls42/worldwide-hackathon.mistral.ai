@@ -1,0 +1,77 @@
+import 'dotenv/config';
+import express from 'express';
+import { mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { Mistral } from '@mistralai/mistralai';
+
+import { ProjectStore } from './store.js';
+import { initConfig, getConfig, saveConfig, getApiStatus } from './config.js';
+import { projectRoutes } from './routes/projects.js';
+import { sourceRoutes } from './routes/sources.js';
+import { generateRoutes } from './routes/generate.js';
+import { generationCrudRoutes } from './routes/generations.js';
+import { chatRoutes } from './routes/chat.js';
+import { profileRoutes } from './routes/profiles.js';
+import { ProfileStore } from './profiles.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// --- Validation ---
+if (!process.env.MISTRAL_API_KEY) {
+  console.error('ERREUR: MISTRAL_API_KEY non defini dans .env');
+  process.exit(1);
+}
+
+const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY! });
+const app = express();
+app.disable('x-powered-by');
+const PORT = 3000;
+
+app.use(express.json({ limit: '5mb' }));
+
+// Dev: Vite serves the frontend (proxy), Express = API only
+// Prod: Express serves the built frontend from dist/
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(join(__dirname, 'dist')));
+} else {
+  app.use(express.static(join(__dirname, 'public')));
+}
+app.use('/output', express.static(join(__dirname, 'output')));
+
+// --- Init ---
+const outputDir = join(__dirname, 'output');
+mkdirSync(outputDir, { recursive: true });
+const store = new ProjectStore(outputDir);
+const profileStore = new ProfileStore(outputDir);
+initConfig(outputDir);
+
+// Migration from legacy sources.json
+store.migrateFromLegacy(join(outputDir, 'sources.json'));
+
+// --- Config API ---
+app.get('/api/config', (_req, res) => res.json(getConfig()));
+app.put('/api/config', (req, res) => res.json(saveConfig(req.body)));
+app.get('/api/config/status', (_req, res) => res.json(getApiStatus()));
+
+// --- Routes ---
+app.use('/api/profiles', profileRoutes(outputDir, store));
+app.use('/api/projects', projectRoutes(store));
+app.use('/api/projects', sourceRoutes(store, client, profileStore));
+app.use('/api/projects', generateRoutes(store, client, profileStore));
+app.use('/api/projects', generationCrudRoutes(store, client));
+app.use('/api/projects', chatRoutes(store, client, profileStore));
+
+// --- Start ---
+app.listen(PORT, () => {
+  const projects = store.listProjects();
+  const status = getApiStatus();
+  console.log(`\n  EurekAI — http://localhost:${PORT}`);
+  console.log(`  API Mistral: ${status.mistral ? 'OK' : 'NON CONFIGURE'}`);
+  console.log(
+    `  ElevenLabs: ${status.elevenlabs ? 'OK' : 'NON CONFIGURE (podcast audio desactive)'}`,
+  );
+  console.log(`  Projets: ${projects.length}`);
+  projects.forEach((p) => console.log(`    - ${p.name} (${p.id.slice(0, 8)}...)`));
+  console.log();
+});

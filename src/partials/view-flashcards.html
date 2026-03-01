@@ -1,0 +1,195 @@
+<!-- ======================== FLASHCARDS ======================== -->
+<div x-show="activeView === 'flashcards'">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="font-heading font-bold text-xl title-gradient" x-text="t('flashcards.heading')">
+      Flashcards
+    </h2>
+    <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+    <button
+      @click="generate('flashcards')"
+      :disabled="loading.flashcards || sources.length === 0"
+      class="px-4 min-h-touch rounded-button font-semibold text-body-sm flex items-center gap-2 btn-lift focus-ring bg-gen-flashcards/10 text-gen-flashcards hover:bg-gen-flashcards/20 disabled:opacity-50"
+    >
+      <i x-show="!loading.flashcards" data-lucide="plus" class="w-4 h-4"></i>
+      <span
+        x-show="loading.flashcards"
+        class="w-4 h-4 animate-spin rounded-full border-2 border-gen-flashcards border-t-transparent"
+      ></span>
+      <span x-text="loading.flashcards ? t('common.loading') : t('flashcards.new')"></span>
+    </button>
+  </div>
+
+  <div
+    x-show="generationsByType('flashcards').length === 0 && !loading.flashcards"
+    class="text-center py-12"
+  >
+    <div
+      class="w-16 h-16 mx-auto mb-3 bg-orange-50 rounded-[1rem] border border-gen-flashcards/20 flex items-center justify-center"
+    >
+      <i data-lucide="layers" class="w-8 h-8 text-gen-flashcards"></i>
+    </div>
+    <p class="text-text-primary font-semibold mb-1" x-text="t('flashcards.emptyTitle')"></p>
+    <p
+      class="text-text-secondary text-body-sm mb-4"
+      x-text="sources.length === 0 ? t('common.noSourcesYet') : t('flashcards.emptyWithSources')"
+    ></p>
+    <button
+      x-show="sources.length === 0"
+      @click="goToView('sources')"
+      class="bg-accent text-white px-5 min-h-touch rounded-button font-semibold text-body-sm btn-press focus-ring"
+      x-text="t('common.addSources')"
+    ></button>
+  </div>
+
+  <div class="space-y-3">
+    <template x-for="gen in generationsByType('flashcards')" :key="gen.id">
+      <div class="gen-card border-l-4 border-l-gen-flashcards animate-slide-up">
+        <button
+          @click="toggleGen(gen.id)"
+          class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors focus-ring text-left"
+          :aria-expanded="openGens[gen.id] ? 'true' : 'false'"
+        >
+          <span class="icon-chip icon-chip-flashcards shrink-0"
+            ><i data-lucide="layers" class="w-4 h-4 text-gen-flashcards"></i
+          ></span>
+          <div class="flex-1 min-w-0">
+            <template x-if="editingTitle !== gen.id">
+              <span
+                class="font-semibold text-body-sm text-text-primary truncate block"
+                x-text="gen.title"
+                @dblclick.stop="startEditTitle(gen)"
+              ></span>
+            </template>
+            <template x-if="editingTitle === gen.id">
+              <input
+                x-model="editTitleValue"
+                @click.stop
+                @keydown.enter="saveTitle(gen)"
+                @keydown.escape="editingTitle = null"
+                @blur="saveTitle(gen)"
+                class="w-full border-2 border-primary rounded-button px-2 py-0.5 text-body-sm focus-ring"
+                x-ref="titleInput"
+              />
+            </template>
+            <span
+              class="text-sm text-text-secondary"
+              x-text="new Date(gen.createdAt).toLocaleTimeString(dateLocale())"
+            ></span>
+          </div>
+          <i
+            data-lucide="chevron-down"
+            class="w-5 h-5 text-text-secondary shrink-0 transition-transform"
+            :class="openGens[gen.id] && 'rotate-180'"
+          ></i>
+        </button>
+        <div x-show="openGens[gen.id]" x-transition class="px-4 pb-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mt-3 mb-3 flex-wrap">
+            <div class="flex-1"></div>
+            <button
+              @click.stop="startEditTitle(gen)"
+              class="min-w-[32px] min-h-[32px] flex items-center justify-center text-text-secondary hover:text-primary focus-ring rounded"
+              :aria-label="t('common.rename')"
+            >
+              <i data-lucide="pencil" class="w-4 h-4"></i>
+            </button>
+            <button
+              @click.stop="confirmDelete('generation', () => deleteGen(gen))"
+              class="min-w-[32px] min-h-[32px] flex items-center justify-center text-text-secondary hover:text-danger focus-ring rounded"
+              :aria-label="t('common.delete')"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 mb-4 flex-wrap">
+            <button
+              @click="generateVoice(gen)"
+              :disabled="gen._generatingVoice === true"
+              class="min-h-touch px-4 rounded-button text-body-sm font-semibold flex items-center gap-2 btn-press focus-ring bg-gen-flashcards/10 text-gen-flashcards hover:bg-gen-flashcards/20 disabled:opacity-50"
+            >
+              <i data-lucide="volume-2" class="w-5 h-5"></i>
+              <span
+                x-show="!gen._generatingVoice && !gen._audioUrl"
+                x-text="t('common.readAloud')"
+              ></span>
+              <span
+                x-show="!gen._generatingVoice && gen._audioUrl"
+                x-text="t('common.regenerate')"
+              ></span>
+              <span
+                x-show="gen._generatingVoice"
+                class="animate-pulse"
+                x-text="t('common.generating')"
+              ></span>
+            </button>
+            <audio
+              x-show="gen._audioUrl"
+              controls
+              class="h-10 max-w-xs"
+              :src="gen._audioUrl"
+              :data-gen-id="gen.id"
+            ></audio>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <template x-for="(fc, idx) in flashcardsData(gen)" :key="idx">
+              <button
+                class="flip-card min-h-44 cursor-pointer w-full text-left focus-ring rounded-card"
+                :class="isFlipped(gen, idx) && 'flipped'"
+                @click="toggleFlip(gen, idx)"
+              >
+                <div class="flip-card-inner relative w-full h-full">
+                  <div
+                    class="flip-card-front relative w-full min-h-44 bg-gen-flashcards/10 border-2 border-gen-flashcards/30 rounded-card p-4 flex flex-col items-center justify-center text-center"
+                  >
+                    <span
+                      class="text-body-sm font-semibold text-text-primary"
+                      x-text="fc.question"
+                    ></span>
+                    <div
+                      x-show="flashcardSource(gen, fc).length > 0"
+                      class="flex flex-wrap gap-1 mt-1 justify-center"
+                    >
+                      <template x-for="(src, si) in flashcardSource(gen, fc)" :key="src.id">
+                        <button
+                          @click.stop="openSourceDialog(src)"
+                          class="source-badge text-[0.65em]"
+                          :title="src.filename"
+                          x-text="sources.indexOf(src) + 1"
+                        ></button>
+                      </template>
+                    </div>
+                    <span
+                      class="text-sm text-gen-flashcards mt-2"
+                      x-text="t('flashcards.tapToFlip')"
+                    ></span>
+                  </div>
+                  <div
+                    class="flip-card-back absolute inset-0 bg-gen-flashcards text-white rounded-card p-4 flex items-center justify-center text-center"
+                  >
+                    <span class="text-body-sm font-medium" x-text="fc.answer"></span>
+                  </div>
+                </div>
+              </button>
+            </template>
+          </div>
+          <div
+            x-show="gen.sourceIds && gen.sourceIds.length > 0"
+            class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100"
+          >
+            <span class="text-sm text-text-secondary flex items-center gap-1">
+              <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+              <span x-text="t('common.sources') + ' :'"></span>
+            </span>
+            <template x-for="(src, srcIdx) in genSources(gen)" :key="src.id">
+              <button
+                @click.stop="openSourceDialog(src)"
+                :class="['source-badge', !isSourceReferenced(gen, srcIdx) && 'source-badge-dim']"
+                :title="src.filename"
+                x-text="srcIdx + 1"
+              ></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>

@@ -1,0 +1,102 @@
+<div x-show="sidebarOpen" class="fixed inset-0 z-50 lg:hidden" x-cloak>
+  <div
+    class="absolute inset-0 bg-black/40"
+    @click="sidebarOpen = false"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+  ></div>
+  <aside
+    class="absolute left-0 top-0 bottom-0 w-72 glass shadow-float overflow-y-auto scrollbar-thin"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="-translate-x-full"
+    x-transition:enter-end="translate-x-0"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="translate-x-0"
+    x-transition:leave-end="-translate-x-full"
+  >
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-4">
+        <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+        <h2
+          class="font-heading font-bold text-lg text-text-primary"
+          x-text="t('sidebar.myCourses')"
+        >
+          My Courses
+        </h2>
+        <button
+          @click="sidebarOpen = false"
+          class="min-h-touch min-w-[44px] flex items-center justify-center text-text-secondary hover:text-text-primary focus-ring rounded-button"
+          :aria-label="t('sidebar.close')"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <button
+        @click="showNewProject = true"
+        class="w-full mb-4 min-h-touch bg-primary text-white rounded-button font-semibold text-body-sm flex items-center justify-center gap-2 btn-lift focus-ring"
+      >
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        <span x-text="t('sidebar.newCourse')"></span>
+      </button>
+
+      <div x-show="showNewProject" class="mb-4">
+        <div class="flex gap-2">
+          <input
+            x-model="newProjectName"
+            x-effect="if (showNewProject) $nextTick(() => $el.focus())"
+            @keydown.enter="createProject()"
+            @keydown.escape="showNewProject = false"
+            class="flex-1 min-w-0 input-modern px-3 py-2 text-body-sm"
+            :placeholder="t('sidebar.courseNamePlaceholder')"
+          />
+          <button
+            @click="createProject()"
+            :disabled="!newProjectName.trim()"
+            class="shrink-0 bg-primary-dark text-white px-4 rounded-button font-semibold text-body-sm disabled:opacity-50 btn-press focus-ring"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <template x-for="(p, pi) in sortedProjects()" :key="p.id">
+          <div
+            class="flex items-center gap-3 px-2 py-2 rounded-button cursor-pointer text-body-sm transition-colors group"
+            :class="currentProjectId === p.id ? 'bg-primary-light text-primary-dark font-semibold' : 'hover:bg-gray-50 text-text-primary'"
+            @click="selectProject(p.id); sidebarOpen = false; mobileTab = 'magic'"
+          >
+            <span
+              class="project-initial"
+              :style="'background:' + projectColor(pi)"
+              x-text="p.name.charAt(0).toUpperCase()"
+            ></span>
+            <span class="truncate flex-1" x-text="p.name"></span>
+            <button
+              @click.stop="confirmDelete('projet', () => deleteProject(p.id))"
+              class="min-w-[32px] min-h-[32px] flex items-center justify-center text-text-secondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity focus-ring rounded"
+              :aria-label="t('sidebar.deleteProject')"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </template>
+      </div>
+
+      <div x-show="projects.length === 0" class="mt-8 text-center py-8">
+        <div
+          class="w-16 h-16 mx-auto mb-3 bg-primary-light rounded-[1rem] border border-primary/20 flex items-center justify-center"
+        >
+          <i data-lucide="book-open" class="w-8 h-8 text-primary"></i>
+        </div>
+        <p class="text-text-primary font-semibold mb-1" x-text="t('sidebar.firstCourse')"></p>
+        <p class="text-text-secondary text-body-sm" x-text="t('sidebar.clickNewCourse')"></p>
+      </div>
+    </div>
+  </aside>
+</div>

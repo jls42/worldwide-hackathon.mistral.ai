@@ -1,0 +1,17 @@
+node_modules/
+dist/
+output/
+.env
+*.mp3
+*.mp4
+*.aac
+*.wav
+.claude/
+*.swp
+GRAND_CONSEIL.md
+IDEAS.md
+PLAN.md
+PRIZES.md
+TODO.md
+TODO-after-hackathon.md
+sonar-project.properties

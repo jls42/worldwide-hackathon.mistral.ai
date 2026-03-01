@@ -1,0 +1,233 @@
+<!-- ======================== FICHES (SUMMARY) ======================== -->
+<div x-show="activeView === 'summary'">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="font-heading font-bold text-xl title-gradient" x-text="t('summary.heading')">
+      Summary
+    </h2>
+    <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+    <button
+      @click="generate('summary')"
+      :disabled="loading.summary || sources.length === 0"
+      class="px-4 min-h-touch rounded-button font-semibold text-body-sm flex items-center gap-2 btn-lift focus-ring bg-gen-summary/10 text-gen-summary hover:bg-gen-summary/20 disabled:opacity-50"
+    >
+      <i x-show="!loading.summary" data-lucide="plus" class="w-4 h-4"></i>
+      <span
+        x-show="loading.summary"
+        class="w-4 h-4 animate-spin rounded-full border-2 border-gen-summary border-t-transparent"
+      ></span>
+      <span x-text="loading.summary ? t('common.loading') : t('summary.new')"></span>
+    </button>
+  </div>
+
+  <!-- Empty state -->
+  <div
+    x-show="generationsByType('summary').length === 0 && !loading.summary"
+    class="text-center py-12"
+  >
+    <div
+      class="w-16 h-16 mx-auto mb-3 bg-blue-50 rounded-[1rem] border border-gen-summary/20 flex items-center justify-center"
+    >
+      <i data-lucide="file-text" class="w-8 h-8 text-gen-summary"></i>
+    </div>
+    <p class="text-text-primary font-semibold mb-1" x-text="t('summary.emptyTitle')"></p>
+    <p
+      class="text-text-secondary text-body-sm mb-4"
+      x-text="sources.length === 0 ? t('common.noSourcesYet') : t('summary.emptyWithSources')"
+    ></p>
+    <button
+      x-show="sources.length === 0"
+      @click="goToView('sources')"
+      class="bg-accent text-white px-5 min-h-touch rounded-button font-semibold text-body-sm btn-press focus-ring"
+      x-text="t('common.addSources')"
+    ></button>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="space-y-3">
+    <template x-for="gen in generationsByType('summary')" :key="gen.id">
+      <div class="gen-card border-l-4 border-l-gen-summary animate-slide-up">
+        <button
+          @click="toggleGen(gen.id)"
+          class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors focus-ring text-left"
+          :aria-expanded="openGens[gen.id] ? 'true' : 'false'"
+        >
+          <span class="icon-chip icon-chip-summary shrink-0"
+            ><i data-lucide="file-text" class="w-4 h-4 text-gen-summary"></i
+          ></span>
+          <div class="flex-1 min-w-0">
+            <template x-if="editingTitle !== gen.id">
+              <span
+                class="font-semibold text-body-sm text-text-primary truncate block"
+                x-text="gen.title"
+                @dblclick.stop="startEditTitle(gen)"
+              ></span>
+            </template>
+            <template x-if="editingTitle === gen.id">
+              <input
+                x-model="editTitleValue"
+                @click.stop
+                @keydown.enter="saveTitle(gen)"
+                @keydown.escape="editingTitle = null"
+                @blur="saveTitle(gen)"
+                class="w-full border-2 border-primary rounded-button px-2 py-0.5 text-body-sm focus-ring"
+                x-ref="titleInput"
+              />
+            </template>
+            <span
+              class="text-sm text-text-secondary"
+              x-text="new Date(gen.createdAt).toLocaleTimeString(dateLocale())"
+            ></span>
+          </div>
+          <i
+            data-lucide="chevron-down"
+            class="w-5 h-5 text-text-secondary shrink-0 transition-transform"
+            :class="openGens[gen.id] && 'rotate-180'"
+          ></i>
+        </button>
+        <div x-show="openGens[gen.id]" x-transition class="px-4 pb-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mt-3 mb-3 flex-wrap">
+            <div class="flex-1"></div>
+            <button
+              @click.stop="startEditTitle(gen)"
+              class="min-w-[32px] min-h-[32px] flex items-center justify-center text-text-secondary hover:text-primary focus-ring rounded"
+              :aria-label="t('common.rename')"
+            >
+              <i data-lucide="pencil" class="w-4 h-4"></i>
+            </button>
+            <button
+              @click.stop="confirmDelete('generation', () => deleteGen(gen))"
+              class="min-w-[32px] min-h-[32px] flex items-center justify-center text-text-secondary hover:text-danger focus-ring rounded"
+              :aria-label="t('common.delete')"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 mb-4 flex-wrap">
+            <button
+              @click="generateVoice(gen)"
+              :disabled="gen._generatingVoice === true"
+              class="min-h-touch px-4 rounded-button text-body-sm font-semibold flex items-center gap-2 btn-press focus-ring bg-gen-summary/10 text-gen-summary hover:bg-gen-summary/20 disabled:opacity-50"
+            >
+              <i data-lucide="volume-2" class="w-5 h-5"></i>
+              <span
+                x-show="!gen._generatingVoice && !(gen.data.audioUrl || gen._audioUrl)"
+                x-text="t('common.readAloud')"
+              ></span>
+              <span
+                x-show="!gen._generatingVoice && (gen.data.audioUrl || gen._audioUrl)"
+                x-text="t('common.regenerate')"
+              ></span>
+              <span
+                x-show="gen._generatingVoice"
+                class="animate-pulse"
+                x-text="t('common.generating')"
+              ></span>
+            </button>
+            <audio
+              x-show="gen.data.audioUrl || gen._audioUrl"
+              controls
+              class="h-10 max-w-xs"
+              :src="gen.data.audioUrl || gen._audioUrl"
+              :data-gen-id="gen.id"
+            ></audio>
+          </div>
+          <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+          <h3
+            class="font-heading font-bold summary-title text-text-primary"
+            x-text="summaryData(gen).title"
+          >
+            Summary title
+          </h3>
+          <div
+            class="text-text-primary mb-5 summary-body chat-markdown"
+            x-html="renderWithSources(summaryData(gen).summary, gen)"
+          ></div>
+          <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+          <h4
+            class="font-heading font-semibold text-sm mb-3 text-text-primary flex items-center gap-1.5"
+          >
+            <i data-lucide="list-checks" class="w-4 h-4 text-primary"></i>
+            <span x-text="t('summary.keyPoints')">Key Points</span>
+          </h4>
+          <ul class="list-none space-y-2 mb-5">
+            <template x-for="(pt, ptIdx) in summaryData(gen).key_points" :key="ptIdx">
+              <li
+                class="flex items-start gap-3 bg-gray-50 text-text-primary px-4 py-2.5 rounded-card text-body-sm chat-markdown border border-gray-200"
+              >
+                <span
+                  class="shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold mt-0.5"
+                  x-text="ptIdx + 1"
+                ></span>
+                <span class="flex-1" x-html="renderWithSources(pt, gen)"></span>
+              </li>
+            </template>
+          </ul>
+          <div
+            x-show="summaryData(gen).fun_fact"
+            class="bg-warning-light border border-warning rounded-card p-4 mb-4 flex items-start gap-3"
+          >
+            <i data-lucide="lightbulb" class="w-6 h-6 text-warning-dark shrink-0 mt-0.5"></i>
+            <div>
+              <strong class="text-warning-dark" x-text="t('summary.funFact')"></strong>
+              <div
+                class="text-text-primary text-body-sm chat-markdown"
+                x-html="renderWithSources(summaryData(gen).fun_fact, gen)"
+              ></div>
+            </div>
+          </div>
+          <div x-show="summaryData(gen).vocabulary.length > 0">
+            <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+            <h4
+              class="font-heading font-semibold text-sm mb-2 text-text-primary"
+              x-text="t('summary.vocabulary')"
+            >
+              Vocabulary
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <template x-for="v in summaryData(gen).vocabulary" :key="v.word">
+                <div class="bg-accent-light rounded-button p-3">
+                  <strong class="text-accent-dark text-body-sm" x-text="v.word"></strong>
+                  <p class="text-text-primary text-sm" x-text="v.definition"></p>
+                </div>
+              </template>
+            </div>
+          </div>
+          <div x-show="summaryData(gen).citations.length > 0" class="mt-4 border-t pt-3">
+            <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+            <h4 class="font-semibold text-sm text-text-secondary mb-1" x-text="t('common.sources')">
+              Sources
+            </h4>
+            <ul class="text-sm text-text-secondary space-y-0.5">
+              <template x-for="(cit, citIdx) in summaryData(gen).citations" :key="citIdx">
+                <li x-show="cit && cit.sourceRef" class="flex items-start gap-2">
+                  <span
+                    class="source-badge shrink-0 mt-0.5 text-[0.65em]"
+                    x-text="(cit.sourceRef || '').replace(/[^\d]/g, '')"
+                  ></span>
+                  <span class="chat-markdown" x-html="renderMarkdown(cit.text || '')"></span>
+                </li>
+              </template>
+            </ul>
+          </div>
+          <div
+            x-show="gen.sourceIds && gen.sourceIds.length > 0"
+            class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100"
+          >
+            <span class="text-sm text-text-secondary flex items-center gap-1">
+              <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+              <span x-text="t('common.sources') + ' :'"></span>
+            </span>
+            <template x-for="(src, srcIdx) in genSources(gen)" :key="src.id">
+              <button
+                @click.stop="openSourceDialog(src)"
+                :class="['source-badge', !isSourceReferenced(gen, srcIdx) && 'source-badge-dim']"
+                :title="src.filename"
+                x-text="srcIdx + 1"
+              ></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>

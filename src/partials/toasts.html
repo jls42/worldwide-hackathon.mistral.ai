@@ -1,0 +1,44 @@
+<div
+  class="fixed bottom-20 lg:bottom-6 right-4 z-[60] flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+  aria-live="polite"
+>
+  <template x-for="toast in toasts" :key="toast.id">
+    <div
+      class="pointer-events-auto rounded-card px-4 py-3 shadow-float flex items-start gap-3 text-body-sm animate-toast-in"
+      :class="{
+        'bg-danger-dark text-white': toast.type === 'error',
+        'bg-success-dark text-white': toast.type === 'success',
+        'bg-primary-dark text-white': toast.type === 'info',
+        'bg-warning text-text-primary': toast.type === 'warning'
+      }"
+      :role="toast.type === 'error' ? 'alert' : 'status'"
+    >
+      <i
+        :data-lucide="toast.type === 'error' ? 'alert-circle' : toast.type === 'success' ? 'check-circle' : toast.type === 'warning' ? 'alert-triangle' : 'info'"
+        class="w-5 h-5 shrink-0 mt-0.5"
+      ></i>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium" x-text="toast.message"></p>
+        <button
+          x-show="toast.retryFn"
+          @click="toast.retryFn(); dismissToast(toast.id)"
+          class="mt-1 text-sm font-bold underline focus-ring rounded"
+          x-text="t('common.retry')"
+        ></button>
+        <button
+          x-show="toast.action"
+          @click="toast.action?.fn(); dismissToast(toast.id)"
+          class="mt-1 text-sm font-bold underline focus-ring rounded"
+          x-text="toast.action?.label"
+        ></button>
+      </div>
+      <button
+        @click="dismissToast(toast.id)"
+        class="shrink-0 opacity-80 hover:opacity-100 focus-ring rounded"
+        :aria-label="t('common.close')"
+      >
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </template>
+</div>

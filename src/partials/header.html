@@ -1,0 +1,104 @@
+<header
+  class="sticky top-0 z-40 glass py-1.5 sm:py-0 min-h-[3.5rem] lg:min-h-[5rem] flex items-center px-2 sm:px-4 shadow-card header-bar"
+>
+  <div class="flex items-center gap-1 sm:gap-1.5 lg:gap-3 w-full max-w-7xl mx-auto flex-wrap">
+    <button
+      @click="sidebarOpen = !sidebarOpen"
+      class="lg:hidden min-h-touch min-w-[44px] flex items-center justify-center focus-ring rounded-button btn-press"
+      :aria-label="t('header.menuProjects')"
+    >
+      <i data-lucide="menu" class="w-6 h-6"></i>
+    </button>
+
+    <div class="flex items-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
+      <img src="/logo.webp" alt="EurekAI" class="w-8 h-8 lg:w-14 lg:h-14 shrink-0" />
+      <h1 class="font-heading text-base sm:text-xl lg:text-2xl font-bold truncate title-gradient">
+        EurekAI
+      </h1>
+      <span
+        x-show="currentProject"
+        class="hidden sm:inline text-sm opacity-80 truncate max-w-[150px]"
+        x-text="currentProject?.meta?.name"
+      ></span>
+    </div>
+
+    <!-- Right side: profile + actions — wraps to line 2 on mobile -->
+    <div class="flex items-center gap-0.5 sm:gap-1 basis-full sm:basis-auto justify-end">
+      <!-- Profile indicator -->
+      <button
+        x-show="currentProfile"
+        @click="openProfilePicker()"
+        class="shrink-0 min-h-touch flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 rounded-button focus-ring btn-press hover:bg-gray-100 transition-colors"
+        :title="t('profile.switchProfile')"
+      >
+        <span
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-full inline-block shrink-0"
+          :style="avatarStyle(currentProfile?.avatar || '0')"
+        ></span>
+        <span
+          class="hidden sm:inline text-sm font-medium truncate max-w-[100px]"
+          x-text="currentProfile?.name"
+        ></span>
+      </button>
+
+      <!-- Action buttons group -->
+      <div class="flex items-center shrink-0">
+        <!-- Language selector -->
+        <div class="relative" x-data="{ langOpen: false }">
+          <button
+            @click="langOpen = !langOpen"
+            @click.outside="langOpen = false"
+            class="min-h-touch min-w-[40px] sm:min-w-[44px] flex items-center justify-center focus-ring rounded-button btn-press"
+          >
+            <span
+              class="text-lg"
+              x-text="locale === 'en' ? '\uD83C\uDDEC\uD83C\uDDE7' : '\uD83C\uDDEB\uD83C\uDDF7'"
+            ></span>
+          </button>
+          <div
+            x-show="langOpen"
+            x-transition
+            class="absolute right-0 top-full mt-1 bg-surface rounded-card shadow-float py-1 min-w-[140px] z-50"
+          >
+            <button
+              @click="setLocale('fr'); langOpen = false"
+              class="w-full px-3 py-2 text-left text-body-sm hover:bg-gray-100 flex items-center gap-2"
+              :class="locale === 'fr' && 'font-bold text-primary'"
+            >
+              <span>&#x1F1EB;&#x1F1F7;</span> Fran&ccedil;ais
+            </button>
+            <button
+              @click="setLocale('en'); langOpen = false"
+              class="w-full px-3 py-2 text-left text-body-sm hover:bg-gray-100 flex items-center gap-2"
+              :class="locale === 'en' && 'font-bold text-primary'"
+            >
+              <span>&#x1F1EC;&#x1F1E7;</span> English
+            </button>
+          </div>
+        </div>
+
+        <button
+          @click="toggleTheme()"
+          class="min-h-touch min-w-[40px] sm:min-w-[44px] flex items-center justify-center focus-ring rounded-button btn-press"
+          :aria-label="theme === 'dark' ? t('header.switchToLight') : t('header.switchToDark')"
+          :title="theme === 'dark' ? t('header.lightMode') : t('header.darkMode')"
+        >
+          <i
+            :data-lucide="theme === 'dark' ? 'sun' : 'moon'"
+            class="w-5 h-5"
+            style="transition: transform 300ms ease"
+          ></i>
+        </button>
+
+        <button
+          @click="$refs.settingsDialog?.showModal(); refreshIcons()"
+          class="min-h-touch min-w-[40px] sm:min-w-[44px] flex items-center justify-center focus-ring rounded-button btn-press"
+          :aria-label="t('settings.title')"
+          :title="t('settings.title')"
+        >
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,426 @@
+<!-- Profile Picker Overlay -->
+<div
+  x-show="showProfilePicker"
+  x-transition.opacity
+  class="fixed inset-0 z-50 bg-canvas flex items-center justify-center p-4 overflow-y-auto"
+>
+  <div
+    class="w-full max-w-5xl my-auto flex flex-col lg:flex-row items-center lg:items-end gap-8 lg:gap-16"
+  >
+    <!-- Left: Logo branding -->
+    <div class="shrink-0 text-center">
+      <img
+        src="/logo.webp"
+        alt="EurekAI"
+        class="w-64 h-64 lg:w-96 lg:h-96 mx-auto drop-shadow-lg"
+      />
+      <h1 class="font-heading font-bold text-3xl lg:text-4xl title-gradient mt-4">EurekAI</h1>
+      <p class="text-text-secondary text-body-sm mt-1" x-text="t('profile.selectOrCreate')"></p>
+    </div>
+
+    <!-- Right: Profile selection -->
+    <div class="flex-1 min-w-0 w-full lg:max-w-lg">
+      <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+      <h2
+        class="font-heading font-bold text-2xl title-gradient mb-6 text-center"
+        x-text="t('profile.whoIsLearning')"
+      >
+        Who is learning?
+      </h2>
+
+      <!-- Existing profiles grid -->
+      <div
+        x-show="profiles.length > 0 && !showProfileForm && !editingProfile"
+        class="flex flex-wrap justify-center gap-4 mb-6"
+      >
+        <template x-for="p in profiles" :key="p.id">
+          <!-- NOSONAR(S1082) — Alpine.js @keydown.enter + @keydown.space handlers are equivalent to native onKeyDown -->
+          <div
+            @click="selectProfile(p.id)"
+            role="button"
+            tabindex="0"
+            @keydown.enter="selectProfile(p.id)"
+            @keydown.space.prevent="selectProfile(p.id)"
+            class="relative group bg-surface rounded-card p-5 shadow-card hover:shadow-float transition-all card-lift btn-press focus-ring text-center cursor-pointer w-48"
+          >
+            <span
+              class="w-36 aspect-[4/5] rounded-xl block mx-auto mb-3 shrink-0"
+              :style="avatarStyle(p.avatar)"
+            ></span>
+            <span class="font-heading font-bold text-lg block truncate" x-text="p.name"></span>
+            <span
+              class="text-sm text-text-secondary"
+              x-text="t('profile.ageLabel', { age: p.age })"
+            ></span>
+            <span
+              class="block text-xs mt-1.5 px-2 py-0.5 rounded-full inline-block"
+              :class="{
+              'bg-green-100 text-green-700': p.ageGroup === 'enfant',
+              'bg-blue-100 text-blue-700': p.ageGroup === 'ado',
+              'bg-purple-100 text-purple-700': p.ageGroup === 'etudiant',
+              'bg-orange-100 text-orange-700': p.ageGroup === 'adulte'
+            }"
+              x-text="t('profile.group.' + p.ageGroup)"
+            ></span>
+            <!-- Moderation badge -->
+            <button
+              @click.stop="toggleModeration(p.id)"
+              class="mt-1.5 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors"
+              :class="p.useModeration ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+              :title="p.useModeration ? t('profile.moderationOn') : t('profile.moderationOff')"
+            >
+              <i :data-lucide="p.useModeration ? 'shield-check' : 'shield-off'" class="w-3 h-3"></i>
+            </button>
+            <!-- Chat badge -->
+            <button
+              @click.stop="toggleChat(p.id)"
+              class="mt-1 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors"
+              :class="p.chatEnabled ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+              :title="p.chatEnabled ? t('profile.chatOn') : t('profile.chatOff')"
+            >
+              <i data-lucide="message-circle" class="w-3 h-3"></i>
+            </button>
+            <div
+              class="absolute top-1.5 right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+            >
+              <button
+                @click.stop="startEditProfile(p.id)"
+                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-primary/10 hover:text-primary transition-colors focus-ring"
+                :aria-label="t('profile.editProfile')"
+              >
+                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+              </button>
+              <button
+                @click.stop="deleteProfile(p.id)"
+                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-danger/10 hover:text-danger transition-colors focus-ring"
+                :aria-label="t('common.delete')"
+              >
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- New profile button -->
+      <div x-show="!showProfileForm && !editingProfile" class="text-center">
+        <button
+          @click="showProfileForm = true; $nextTick(() => refreshIcons())"
+          class="bg-primary text-white px-6 min-h-touch rounded-button font-semibold text-body-sm btn-press focus-ring inline-flex items-center gap-2"
+        >
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span x-text="t('profile.addProfile')"></span>
+        </button>
+      </div>
+
+      <!-- New profile form -->
+      <div
+        x-show="showProfileForm && !editingProfile"
+        class="bg-surface rounded-card p-6 shadow-card max-w-lg mx-auto"
+      >
+        <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+        <h2
+          class="font-heading font-bold text-lg mb-4 text-center"
+          x-text="t('profile.newProfile')"
+        >
+          New Profile
+        </h2>
+
+        <label
+          for="new-name"
+          class="block text-body-sm font-medium mb-1"
+          x-text="t('profile.nameLabel')"
+          >Name</label
+        >
+        <input
+          id="new-name"
+          type="text"
+          x-model="newProfileName"
+          class="input-modern w-full px-3 py-2 mb-3"
+          :placeholder="t('profile.namePlaceholder')"
+          maxlength="20"
+        />
+
+        <label
+          for="new-age"
+          class="block text-body-sm font-medium mb-1"
+          x-text="t('profile.ageLabel2')"
+          >Age</label
+        >
+        <input
+          id="new-age"
+          type="number"
+          inputmode="numeric"
+          x-model.number="newProfileAge"
+          class="input-modern w-full px-3 py-2 mb-3"
+          min="4"
+          max="120"
+          placeholder="9"
+        />
+
+        <span class="block text-body-sm font-medium mb-1" x-text="t('profile.localeLabel')"></span>
+        <div class="relative mb-3" x-data="{ langOpen: false }">
+          <button
+            @click="langOpen = !langOpen"
+            @click.outside="langOpen = false"
+            class="input-modern w-full px-3 py-2 flex items-center gap-2 text-left rounded-button cursor-pointer"
+          >
+            <span x-text="newProfileLocale === 'en' ? '🇬🇧' : '🇫🇷'"></span>
+            <span x-text="newProfileLocale === 'en' ? 'English' : 'Français'"></span>
+            <i data-lucide="chevron-down" class="w-4 h-4 ml-auto text-text-secondary"></i>
+          </button>
+          <div
+            x-show="langOpen"
+            x-transition
+            class="absolute left-0 top-full mt-1 bg-surface rounded-card shadow-float py-1 w-full z-50"
+          >
+            <button
+              @click="newProfileLocale = 'fr'; langOpen = false"
+              class="w-full px-3 py-2 text-left text-body-sm hover:bg-primary/10 transition-colors flex items-center gap-2"
+            >
+              🇫🇷 Français
+            </button>
+            <button
+              @click="newProfileLocale = 'en'; langOpen = false"
+              class="w-full px-3 py-2 text-left text-body-sm hover:bg-primary/10 transition-colors flex items-center gap-2"
+            >
+              🇬🇧 English
+            </button>
+          </div>
+        </div>
+
+        <!-- PIN parental (for under 15) -->
+        <div x-show="Number(newProfileAge) >= 4 && Number(newProfileAge) < 15" class="mb-3">
+          <div class="bg-amber-50 border border-amber-200 rounded-card p-3 mb-3">
+            <div class="flex items-start gap-2">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"></i>
+              <p class="text-body-sm text-amber-800" x-text="t('profile.pinInfo')"></p>
+            </div>
+          </div>
+          <label
+            for="new-pin"
+            class="block text-body-sm font-medium mb-1"
+            x-text="t('profile.pinLabel')"
+            >PIN</label
+          >
+          <input
+            id="new-pin"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            x-model="newProfilePin"
+            class="input-modern w-full px-3 py-2 mb-2 font-mono tracking-[0.5em]"
+            :placeholder="t('profile.pinPlaceholder')"
+            autocomplete="off"
+          />
+          <label
+            for="new-pin-confirm"
+            class="block text-body-sm font-medium mb-1"
+            x-text="t('profile.pinConfirmLabel')"
+            >Confirm PIN</label
+          >
+          <input
+            id="new-pin-confirm"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            x-model="newProfilePinConfirm"
+            class="input-modern w-full px-3 py-2 font-mono tracking-[0.5em]"
+            :placeholder="t('profile.pinPlaceholder')"
+            autocomplete="off"
+          />
+          <p
+            x-show="newProfilePin && newProfilePinConfirm && newProfilePin !== newProfilePinConfirm"
+            class="text-xs text-danger mt-1"
+            x-text="t('profile.pinMismatch')"
+          ></p>
+        </div>
+
+        <span class="block text-body-sm font-medium mb-2" x-text="t('profile.avatarLabel')"></span>
+        <div class="grid grid-cols-5 gap-2 mb-4">
+          <template x-for="av in profileAvatars" :key="av">
+            <button
+              @click="newProfileAvatar = av"
+              class="aspect-[4/5] rounded-xl overflow-hidden transition-all focus-ring"
+              :class="newProfileAvatar === av ? 'ring-3 ring-primary scale-105 shadow-float' : 'ring-1 ring-gray-200 hover:ring-gray-300 hover:shadow-card'"
+            >
+              <span class="w-full h-full block" :style="avatarStyle(av)"></span>
+            </button>
+          </template>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            @click="showProfileForm = false"
+            class="flex-1 min-h-touch rounded-button font-semibold text-body-sm bg-gray-100 text-text-secondary hover:bg-gray-200 transition-colors btn-press focus-ring"
+            x-text="t('common.cancel')"
+          ></button>
+          <button
+            @click="createProfile()"
+            :disabled="!newProfileName.trim() || !newProfileAge || (Number(newProfileAge) < 15 && (!/^\d{4}$/.test(newProfilePin) || newProfilePin !== newProfilePinConfirm))"
+            class="flex-1 min-h-touch rounded-button font-semibold text-body-sm bg-primary text-white hover:bg-primary/90 transition-colors btn-press focus-ring disabled:opacity-50"
+            x-text="t('common.add')"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Edit profile form -->
+      <template x-if="editingProfile">
+        <div class="bg-surface rounded-card p-6 shadow-card max-w-lg mx-auto">
+          <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+          <h2
+            class="font-heading font-bold text-lg mb-4 text-center"
+            x-text="t('profile.editProfile')"
+          >
+            Edit Profile
+          </h2>
+
+          <label
+            for="edit-name"
+            class="block text-body-sm font-medium mb-1"
+            x-text="t('profile.nameLabel')"
+            >Name</label
+          >
+          <input
+            id="edit-name"
+            type="text"
+            x-model="editingProfile.name"
+            class="input-modern w-full px-3 py-2 mb-3"
+            :placeholder="t('profile.namePlaceholder')"
+            maxlength="20"
+          />
+
+          <label
+            for="edit-age"
+            class="block text-body-sm font-medium mb-1"
+            x-text="t('profile.ageLabel2')"
+            >Age</label
+          >
+          <input
+            id="edit-age"
+            type="number"
+            inputmode="numeric"
+            x-model.number="editingProfile.age"
+            class="input-modern w-full px-3 py-2 mb-3"
+            min="4"
+            max="120"
+            placeholder="9"
+          />
+
+          <span
+            class="block text-body-sm font-medium mb-1"
+            x-text="t('profile.localeLabel')"
+          ></span>
+          <div class="relative mb-3" x-data="{ langOpen: false }">
+            <button
+              @click="langOpen = !langOpen"
+              @click.outside="langOpen = false"
+              class="input-modern w-full px-3 py-2 flex items-center gap-2 text-left rounded-button cursor-pointer"
+            >
+              <span x-text="editingProfile?.locale === 'en' ? '🇬🇧' : '🇫🇷'"></span>
+              <span x-text="editingProfile?.locale === 'en' ? 'English' : 'Français'"></span>
+              <i data-lucide="chevron-down" class="w-4 h-4 ml-auto text-text-secondary"></i>
+            </button>
+            <div
+              x-show="langOpen"
+              x-transition
+              class="absolute left-0 top-full mt-1 bg-surface rounded-card shadow-float py-1 w-full z-50"
+            >
+              <button
+                @click="editingProfile.locale = 'fr'; langOpen = false"
+                class="w-full px-3 py-2 text-left text-body-sm hover:bg-primary/10 transition-colors flex items-center gap-2"
+              >
+                🇫🇷 Français
+              </button>
+              <button
+                @click="editingProfile.locale = 'en'; langOpen = false"
+                class="w-full px-3 py-2 text-left text-body-sm hover:bg-primary/10 transition-colors flex items-center gap-2"
+              >
+                🇬🇧 English
+              </button>
+            </div>
+          </div>
+
+          <span
+            class="block text-body-sm font-medium mb-2"
+            x-text="t('profile.avatarLabel')"
+          ></span>
+          <div class="grid grid-cols-5 gap-2 mb-4">
+            <template x-for="av in profileAvatars" :key="av">
+              <button
+                @click="editingProfile.avatar = av"
+                class="aspect-[4/5] rounded-xl overflow-hidden transition-all focus-ring"
+                :class="editingProfile?.avatar === av ? 'ring-3 ring-primary scale-105 shadow-float' : 'ring-1 ring-gray-200 hover:ring-gray-300 hover:shadow-card'"
+              >
+                <span class="w-full h-full block" :style="avatarStyle(av)"></span>
+              </button>
+            </template>
+          </div>
+
+          <!-- Moderation toggle -->
+          <div class="mb-3 p-3 bg-gray-50 rounded-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <span
+                  class="text-body-sm font-medium"
+                  x-text="t('profile.moderationToggle')"
+                ></span>
+                <p
+                  class="text-xs text-text-secondary"
+                  x-text="editingProfile?.useModeration ? t('profile.moderationOn') : t('profile.moderationOff')"
+                ></p>
+              </div>
+              <button
+                @click="editingProfile.useModeration = !editingProfile.useModeration"
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-ring"
+                :class="editingProfile?.useModeration ? 'bg-green-500' : 'bg-gray-300'"
+              >
+                <span
+                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                  :class="editingProfile?.useModeration ? 'translate-x-6' : 'translate-x-1'"
+                ></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat toggle -->
+          <div class="mb-4 p-3 bg-gray-50 rounded-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-body-sm font-medium" x-text="t('profile.chatToggle')"></span>
+                <p
+                  class="text-xs text-text-secondary"
+                  x-text="editingProfile?.chatEnabled ? t('profile.chatOn') : t('profile.chatOff')"
+                ></p>
+              </div>
+              <button
+                @click="editingProfile.chatEnabled = !editingProfile.chatEnabled"
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-ring"
+                :class="editingProfile?.chatEnabled ? 'bg-blue-500' : 'bg-gray-300'"
+              >
+                <span
+                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                  :class="editingProfile?.chatEnabled ? 'translate-x-6' : 'translate-x-1'"
+                ></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              @click="editingProfile = null"
+              class="flex-1 min-h-touch rounded-button font-semibold text-body-sm bg-gray-100 text-text-secondary hover:bg-gray-200 transition-colors btn-press focus-ring"
+              x-text="t('common.cancel')"
+            ></button>
+            <button
+              @click="saveEditProfile()"
+              :disabled="!editingProfile?.name?.trim() || !editingProfile?.age"
+              class="flex-1 min-h-touch rounded-button font-semibold text-body-sm bg-primary text-white hover:bg-primary/90 transition-colors btn-press focus-ring disabled:opacity-50"
+              x-text="t('common.save')"
+            ></button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>

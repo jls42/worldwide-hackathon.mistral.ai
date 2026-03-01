@@ -1,0 +1,101 @@
+<aside
+  class="hidden lg:flex flex-col shrink-0 sticky top-[5rem] self-start my-4 overflow-y-auto overflow-x-hidden scrollbar-thin sidebar-glass"
+  :class="sidebarCollapsed ? 'w-[5.25rem]' : 'w-[17rem]'"
+  style="max-height: calc(100vh - 6rem)"
+>
+  <div class="p-3 flex-1">
+    <button
+      x-show="!sidebarCollapsed"
+      @click="showNewProject = true"
+      class="w-full mb-3 min-h-touch bg-gradient-to-r from-primary to-primary-dark text-white rounded-button font-semibold text-body-sm flex items-center justify-center gap-2 btn-lift focus-ring"
+    >
+      <i data-lucide="plus-circle" class="w-5 h-5"></i>
+      <span x-text="t('sidebar.newCourse')"></span>
+    </button>
+    <button
+      x-show="sidebarCollapsed"
+      @click="sidebarCollapsed = false; showNewProject = true"
+      class="w-full mb-3 min-h-touch bg-gradient-to-r from-primary to-primary-dark text-white rounded-full flex items-center justify-center btn-press focus-ring"
+      :aria-label="t('sidebar.newCourse')"
+    >
+      <i data-lucide="plus" class="w-5 h-5"></i>
+    </button>
+
+    <div x-show="showNewProject && !sidebarCollapsed" class="mb-3">
+      <div class="flex gap-2">
+        <input
+          x-model="newProjectName"
+          x-effect="if (showNewProject && !sidebarCollapsed) $nextTick(() => $el.focus())"
+          @keydown.enter="createProject()"
+          @keydown.escape="showNewProject = false"
+          class="flex-1 min-w-0 input-modern px-3 py-2 text-body-sm"
+          :placeholder="t('sidebar.courseNamePlaceholder')"
+        />
+        <button
+          @click="createProject()"
+          :disabled="!newProjectName.trim()"
+          class="shrink-0 bg-primary-dark text-white px-3 rounded-button font-semibold text-body-sm disabled:opacity-50 btn-press focus-ring"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <template x-for="(p, pi) in sortedProjects()" :key="p.id">
+        <div
+          class="relative flex items-center gap-2 rounded-button cursor-pointer transition-colors group"
+          :class="[currentProjectId === p.id ? 'bg-primary/10 font-semibold' : 'hover:bg-white/60 text-text-primary', sidebarCollapsed ? 'px-2 py-2 justify-center' : 'px-2.5 py-2']"
+          @click="selectProject(p.id)"
+          :title="sidebarCollapsed ? p.name : ''"
+        >
+          <span
+            class="project-initial"
+            :style="'background:' + projectColor(pi)"
+            x-text="p.name.charAt(0).toUpperCase()"
+          ></span>
+          <span x-show="sidebarCollapsed" class="sidebar-tooltip" x-text="p.name"></span>
+          <template x-if="!sidebarCollapsed">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <span class="truncate flex-1 text-body-sm" x-text="p.name"></span>
+              <button
+                @click.stop="confirmDelete('projet', () => deleteProject(p.id))"
+                class="min-w-[28px] min-h-[28px] flex items-center justify-center text-text-secondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity focus-ring rounded"
+                :aria-label="t('sidebar.delete')"
+              >
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <div x-show="projects.length === 0 && !sidebarCollapsed" class="mt-6 text-center py-6">
+      <div
+        class="w-12 h-12 mx-auto mb-2 bg-primary-light rounded-[1rem] border border-primary/20 flex items-center justify-center"
+      >
+        <i data-lucide="book-open" class="w-6 h-6 text-primary"></i>
+      </div>
+      <p class="text-text-secondary text-body-sm" x-text="t('sidebar.firstCourse')"></p>
+    </div>
+  </div>
+
+  <div class="p-3 border-t border-gray-200/50">
+    <button
+      @click="sidebarCollapsed = !sidebarCollapsed"
+      class="w-full min-h-[36px] flex items-center justify-center gap-2 text-text-secondary hover:text-text-primary focus-ring rounded-button btn-press text-sm"
+      :aria-label="sidebarCollapsed ? t('sidebar.openSidebar') : t('sidebar.collapseSidebar')"
+    >
+      <i
+        :data-lucide="sidebarCollapsed ? 'panel-left-open' : 'panel-left-close'"
+        class="w-4 h-4"
+      ></i>
+      <span
+        x-show="!sidebarCollapsed"
+        class="text-xs font-medium"
+        x-text="t('sidebar.collapse')"
+      ></span>
+    </button>
+  </div>
+</aside>

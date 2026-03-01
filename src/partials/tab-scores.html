@@ -1,0 +1,51 @@
+<div x-show="mobileTab === 'scores' && isMobile" class="p-4" x-cloak>
+  <h2 class="font-heading font-bold text-xl title-gradient mb-4" x-text="t('scores.heading')">
+    Scores
+  </h2>
+  <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+
+  <template x-if="getQuizScores().length === 0">
+    <div class="text-center py-16">
+      <div
+        class="w-20 h-20 mx-auto mb-4 bg-warning-light rounded-[1rem] border border-warning/20 flex items-center justify-center"
+      >
+        <i data-lucide="trophy" class="w-10 h-10 text-warning-dark"></i>
+      </div>
+      <p
+        class="font-heading font-bold text-lg text-text-primary mb-2"
+        x-text="t('scores.emptyTitle')"
+      ></p>
+      <p class="text-text-secondary text-body-sm mb-4" x-text="t('scores.emptySubtitle')"></p>
+      <button
+        @click="mobileTab = 'magic'"
+        class="bg-primary text-white px-6 min-h-touch rounded-button font-semibold text-body-sm btn-press focus-ring"
+        x-text="t('scores.goToMagic')"
+      ></button>
+    </div>
+  </template>
+
+  <template x-if="getQuizScores().length > 0">
+    <div class="space-y-3">
+      <template x-for="qs in getQuizScores()" :key="qs.gen.id">
+        <div class="bg-surface rounded-card shadow-card p-4 card-lift animate-slide-up">
+          <div class="flex items-center gap-3 mb-2">
+            <i data-lucide="brain" class="w-5 h-5 text-gen-quiz"></i>
+            <span
+              class="font-semibold text-body-sm text-text-primary flex-1 truncate"
+              x-text="qs.gen.title"
+            ></span>
+            <span
+              class="text-sm px-2.5 py-1 rounded-badge font-bold"
+              :class="qs.lastScore === qs.total ? 'bg-success-light text-success-dark' : 'bg-warning-light text-warning-dark'"
+              x-text="qs.lastScore + '/' + qs.total"
+            ></span>
+          </div>
+          <p
+            class="text-sm text-text-secondary"
+            x-text="t('scores.attempts', { count: qs.attempts })"
+          ></p>
+        </div>
+      </template>
+    </div>
+  </template>
+</div>

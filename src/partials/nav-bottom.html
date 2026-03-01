@@ -1,0 +1,34 @@
+<nav
+  class="fixed bottom-0 left-0 right-0 glass border-t border-gray-200 z-40 lg:hidden pb-safe"
+  :aria-label="t('nav.mainNav')"
+>
+  <div class="flex">
+    <button
+      @click="mobileTab = 'courses'"
+      class="flex-1 flex flex-col items-center justify-center min-h-touch py-2 transition-colors focus-ring"
+      :class="mobileTab === 'courses' ? 'text-primary' : 'text-text-secondary'"
+      :aria-current="mobileTab === 'courses' ? 'page' : false"
+    >
+      <i data-lucide="book-open" class="w-6 h-6"></i>
+      <span class="text-xs font-semibold mt-0.5" x-text="t('nav.courses')"></span>
+    </button>
+    <button
+      @click="mobileTab = 'magic'"
+      class="flex-1 flex flex-col items-center justify-center min-h-touch py-2 transition-colors focus-ring"
+      :class="mobileTab === 'magic' ? 'text-primary' : 'text-text-secondary'"
+      :aria-current="mobileTab === 'magic' ? 'page' : false"
+    >
+      <i data-lucide="sparkles" class="w-6 h-6"></i>
+      <span class="text-xs font-semibold mt-0.5" x-text="t('nav.magic')"></span>
+    </button>
+    <button
+      @click="mobileTab = 'scores'"
+      class="flex-1 flex flex-col items-center justify-center min-h-touch py-2 transition-colors focus-ring"
+      :class="mobileTab === 'scores' ? 'text-primary' : 'text-text-secondary'"
+      :aria-current="mobileTab === 'scores' ? 'page' : false"
+    >
+      <i data-lucide="trophy" class="w-6 h-6"></i>
+      <span class="text-xs font-semibold mt-0.5" x-text="t('nav.scores')"></span>
+    </button>
+  </div>
+</nav>

@@ -1,0 +1,56 @@
+<dialog
+  x-ref="consigneDialog"
+  class="rounded-dialog p-4 sm:p-6 max-w-2xl w-full max-h-[80vh] shadow-float glass overflow-hidden"
+>
+  <template x-if="consigne && consigne.found">
+    <div class="flex flex-col max-h-[calc(80vh-3rem)]">
+      <!-- Header — always visible -->
+      <div class="flex items-center gap-3 mb-4 shrink-0">
+        <div
+          class="w-12 h-12 bg-success-light rounded-[1rem] border border-success/20 flex items-center justify-center shrink-0"
+        >
+          <i data-lucide="target" class="w-6 h-6 text-success-dark"></i>
+        </div>
+        <div>
+          <!-- NOSONAR(S5254) — Alpine.js x-text fills heading content at runtime -->
+          <h2 class="font-heading font-bold text-lg text-text-primary" x-text="t('consigne.title')">
+            Instructions
+          </h2>
+          <p class="text-sm text-text-secondary" x-text="t('consigne.subtitle')"></p>
+        </div>
+      </div>
+      <p
+        x-show="consigne.text"
+        class="text-body-sm text-text-primary mb-3 shrink-0"
+        x-text="consigne.text"
+      ></p>
+      <!-- Key topics — only this part scrolls -->
+      <div class="overflow-y-auto mb-4 min-h-0">
+        <div class="space-y-2 sm:grid sm:grid-cols-2 sm:gap-2 sm:space-y-0">
+          <template x-for="(topic, i) in consigne.keyTopics" :key="i">
+            <div class="flex items-start gap-2 bg-success-light/40 rounded-button px-3 py-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-success-dark shrink-0 mt-0.5"></i>
+              <span class="text-body-sm text-text-primary" x-text="topic"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+      <!-- Buttons — always visible -->
+      <div class="flex gap-2 shrink-0">
+        <button
+          @click="detectConsigne()"
+          :disabled="consigneLoading"
+          class="flex-1 min-h-touch rounded-button font-semibold text-body-sm bg-gray-100 text-text-secondary hover:bg-gray-200 card-lift btn-press focus-ring flex items-center justify-center gap-1.5 disabled:opacity-50"
+        >
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <span x-text="t('consigne.reAnalyze')"></span>
+        </button>
+        <button
+          @click="$refs.consigneDialog?.close()"
+          class="flex-1 min-h-touch rounded-button font-semibold text-body-sm bg-success-dark text-white hover:bg-success-dark/90 card-lift btn-press focus-ring"
+          x-text="t('consigne.understood')"
+        ></button>
+      </div>
+    </div>
+  </template>
+</dialog>
