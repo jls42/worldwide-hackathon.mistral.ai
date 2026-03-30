@@ -19,11 +19,15 @@
   <a href="https://www.youtube.com/watch?v=_b1TQz2leoI">▶️ Watch the demo on YouTube</a> · <a href="README.fr.md">🇫🇷 Lire en français</a>
 </p>
 
+> [!NOTE]
+> **This repository is a historical archive of the Mistral AI Worldwide Hackathon submission (March 2026). The code is frozen as-is.**
+> Active development continues at **[github.com/jls42/EurekAI](https://github.com/jls42/EurekAI)**.
+
 ---
 
 ## The Story — Why EurekAI?
 
-**EurekAI** was born during the [Mistral AI Worldwide Hackathon](https://worldwidehackathon.mistral.ai/) (March 2026). I needed a project idea — and it came from something very real: I regularly help my daughter prepare for school tests, and I thought there had to be a way to make it more fun and interactive with AI.
+**EurekAI** was born during the [Mistral AI Worldwide Hackathon](https://luma.com/mistralhack-online) ([site officiel](https://worldwide-hackathon.mistral.ai/)) (March 2026). I needed a project idea — and it came from something very real: I regularly help my daughter prepare for school tests, and I thought there had to be a way to make it more fun and interactive with AI.
 
 The goal: take **any input** — a photo of a textbook, pasted text, a voice recording, a web search — and transform it into **study sheets, flashcards, quizzes, podcasts, illustrations, and more**. All powered by Mistral AI's French-native models, making it a naturally great fit for French-speaking students.
 
@@ -265,7 +269,7 @@ The router uses `mistral-small-latest` to analyze source content and recommend w
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/eurekai.git
+git clone https://github.com/jls42/worldwide-hackathon.mistral.ai.git
 cd eurekai
 
 # Install dependencies
